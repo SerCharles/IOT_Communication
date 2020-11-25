@@ -1,6 +1,7 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy import signal
-from utils import load_wave, save_wave, init_args, generate_random_seq, compare_seqs
+from utils import load_wave, save_wave, init_args, generate_random_seq, compare_seqs, string_encode, string_decode, divide_packets, windowed_fft
 
 def generate_pulse(framerate, frequency, volume, start_place, duration):
     '''
@@ -31,14 +32,17 @@ def modulation(args, bits):
 
 def get_dominate_frequency(args, wave):
     '''
-    描述：获取一个区间内主导性频率
+    描述：获取一个区间内主导性频率(0的还是1的)
     参数：全局参数，区间的波形（numpy格式一维数组）
-    返回：主导频率
+    返回：结果
     '''
-    fourier_result = abs(np.fft.fft(wave))
-    index = np.argmax(fourier_result)
-    frequency = round(index / len(fourier_result) * args.framerate)
-    return frequency
+    fourier_result = windowed_fft(wave)
+    size_0 = fourier_result[round(args.frequency_0 / args.framerate * len(fourier_result))]
+    size_1 = fourier_result[round(args.frequency_1 / args.framerate * len(fourier_result))]
+    if size_0 > size_1:
+        return 0
+    else: 
+        return 1
 
 def demodulation(args, wave):
     '''
@@ -48,40 +52,37 @@ def demodulation(args, wave):
     '''
     result = []
     window_length = round(args.framerate * args.window_length)
-    threshold = 0.1 #如果窗口太小了就不考虑了
-    frequency_range = [0.9, 1.1]
     start_place = 0
     while start_place < len(wave):
         if start_place + window_length <= len(wave):
             length = window_length
         else: 
-            length = window_length - start_place
-        if length < window_length * threshold:
-            continue
-        
+            length = len(wave) - start_place
+            
         sub_wave = wave[start_place: start_place + length - 1]
-        dominate_frequency = get_dominate_frequency(args, sub_wave)
-        if dominate_frequency >= args.frequency_0 * frequency_range[0] and dominate_frequency <= args.frequency_0 * frequency_range[1]:
-            result.append(0)
-        elif dominate_frequency >= args.frequency_1 * frequency_range[0] and dominate_frequency <= args.frequency_1 * frequency_range[1]:
-            result.append(1)
-        start_place += window_length
+        dominate = get_dominate_frequency(args, sub_wave)
+        result.append(dominate)
+        start_place += length
+
     return result
 
 if __name__ == '__main__':
+
+
     args = init_args()
-    original_seq = generate_random_seq(300)
-    print("The original seq is:\n", original_seq)
+    original_info = '绿罗马帝国强大！1453征服拜占庭！Ceddin deden， neslin baban！'
+    original_seq = string_encode(original_info)
+    original_seq = args.preamble + original_seq
 
-    the_wave = modulation(args, original_seq)
-    save_wave(the_wave, framerate = args.framerate, sample_width = args.sample_width, nchannels = args.nchannels, save_base = 'send', file_name = 'kebab.wav')
-    get_wave = load_wave(save_base = 'send', file_name = 'kebab.wav')
+    #the_wave = modulation(args, original_seq)
+    #save_wave(the_wave, framerate = args.framerate, sample_width = args.sample_width, nchannels = args.nchannels, save_base = 'send', file_name = 'kebab.wav')
+    
+    get_wave = load_wave(save_base = 'receive', file_name = 'output.wav')
+    #get_wave = load_wave(save_base = 'send', file_name = 'kebab.wav')
     get_seq = demodulation(args, get_wave)
-    print("The loaded seq is:\n", get_seq)
-
-    result = compare_seqs(original_seq, get_seq)
-    if result:
-        print("The original seq and the seq I get is identical, right!")
-    else: 
-        print("The original seq and the seq I get is not identical, wrong!")
+    packet, place = divide_packets(args, get_seq)
+    result = string_decode(packet)
+    print(original_info)
+    print(result)
+    print(place)
     

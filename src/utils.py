@@ -24,7 +24,7 @@ def init_args():
     parser.add_argument("--framerate", type = int, default = 48000)
     parser.add_argument("--sample_width", type = int, default = 2)
     parser.add_argument("--nchannels", type = int, default = 1)
-    parser.add_argument("--volume", type = float, default = 1000.0)
+    parser.add_argument("--volume", type = float, default = 20000.0)
     parser.add_argument("--start_place", type = int, default = 0)
 
     #单个窗口的长度(单位秒)
@@ -37,6 +37,9 @@ def init_args():
     parser.add_argument("--save_base_send", type = str, default = 'send')
     parser.add_argument("--save_base_receive", type = str, default = 'receive')
     args = parser.parse_args()
+    
+    #前导码
+    args.preamble = [1, 0, 1, 0, 1, 0, 1, 0]
     return args
 
 def save_wave(my_wave, framerate = 44100, sample_width = 2, nchannels = 1, save_base = 'sound', file_name = 'pulse.wav'):
@@ -104,3 +107,84 @@ def compare_seqs(original_seq, get_seq):
         if original_seq[i] != get_seq[i]:
             return False
     return True
+
+def string_encode(string):
+    '''
+    描述：将中英文字符串编码成0-1序列
+    参数：中英文混杂的字符串（已经按照大小分包）
+    返回：0-1序列数组
+    '''
+    byte_list = str.encode(string, encoding = "utf-8")
+    bit_list = []
+    for byte in byte_list:
+        for i in range(8):
+            num = (byte >> (7 - i)) & 1
+            bit_list.append(num)
+    return bit_list
+
+def string_decode(bit_list):
+    '''
+    描述：将0-1序列解码为中英文字符串
+    参数：0-1序列数组（已经去除前导码和包头）
+    返回：中英文字符串
+    '''
+    byte_list = []
+    length = len(bit_list)
+
+    #补0
+    if length % 8 != 0:
+        for i in range(8 - (length % 8)):
+            bit_list.append(0)
+    
+    #解析
+    start = 0
+    while start < len(bit_list):
+        the_byte_list = bit_list[start : start + 8]
+        the_num = 0
+        for i in range(8):
+            the_num += the_byte_list[i] << (7 - i)
+        #the_byte = chr(the_num)
+        byte_list.append(the_num)
+        start += 8
+    byte_list = bytes(byte_list)
+    result = bytes.decode(byte_list, encoding = "utf-8")
+    return result
+
+
+def divide_packets(args, packet):
+    '''
+    描述：将一大段录音根据前导码拆分成多个包
+    参数：全局参数，整个录音的解码结果
+    返回：packet, place
+        packet是拆解完的每个包的内容，去除前导码
+        place是每个包的开始位置，也就是前导码第一个字符的为主
+    '''
+    i = 0
+    preamble_place = -1
+    #找前导码
+    while i < len(packet):
+        if(i + 8 <= len(packet)):
+            the_eight = packet[i : i + 8]
+            if(the_eight == args.preamble):
+                preamble_place = i
+                break
+        i += 1
+
+    the_packet = packet[preamble_place + 8: ]
+    the_place = preamble_place
+    return the_packet, the_place
+
+def windowed_fft(wave, window_size = 10):
+    '''
+    描述：滑动窗口FFT
+    参数：波, 窗口大小
+    返回：滑动窗口FFT后的结果
+    '''
+    fourier_result = abs(np.fft.fft(wave))
+    result = []
+    for i in range(len(fourier_result)):
+        start = max(0, i - window_size // 2)
+        end = min(len(fourier_result) - 1, i + window_size // 2)
+        num = np.mean(fourier_result[start:end])
+        result.append(num)
+    return result
