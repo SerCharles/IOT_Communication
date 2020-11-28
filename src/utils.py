@@ -17,14 +17,15 @@ def init_args():
     parser = argparse.ArgumentParser(description="Choose the parameters")
 
     #0和1的频率
-    parser.add_argument("--frequency_0", type = int, default = 10000)
-    parser.add_argument("--frequency_1", type = int, default = 20000)
+    parser.add_argument("--frequency_0", type = int, default = 7500)
+    parser.add_argument("--frequency_1", type = int, default = 10000)
 
     #采样频率，振幅，宽度等通用设置
     parser.add_argument("--framerate", type = int, default = 48000)
     parser.add_argument("--sample_width", type = int, default = 2)
     parser.add_argument("--nchannels", type = int, default = 1)
     parser.add_argument("--volume", type = float, default = 20000.0)
+    parser.add_argument("--threshold", type = float, default = 1e10)
     parser.add_argument("--start_place", type = int, default = 0)
 
     #单个窗口的长度(单位秒)
