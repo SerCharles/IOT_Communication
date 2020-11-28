@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
 from utils import load_wave, save_wave, init_args, generate_random_seq, compare_seqs, string_encode, string_decode, divide_packets, windowed_fft
+import statsmodels.tsa.api as smt 
 
 def generate_pulse(framerate, frequency, volume, start_place, duration):
     '''
@@ -30,19 +31,51 @@ def modulation(args, bits):
         result_wave = np.append(result_wave, y)
     return result_wave
 
-def get_dominate_frequency(args, wave):
+
+def get_window_start(args, wave):
     '''
-    描述：获取一个区间内主导性频率(0的还是1的)
-    参数：全局参数，区间的波形（numpy格式一维数组）
-    返回：结果
+    描述：用前导码对齐窗口
+    参数：全局参数，波---numpy格式的一维数组
+    返回：前导码在哪？
     '''
-    fourier_result = windowed_fft(wave)
-    size_0 = fourier_result[round(args.frequency_0 / args.framerate * len(fourier_result))]
-    size_1 = fourier_result[round(args.frequency_1 / args.framerate * len(fourier_result))]
-    if size_0 > size_1:
+    preamble_seq = modulation(args, args.preamble)
+    length = len(wave)
+    length_preamble = len(preamble_seq)
+    start = 0
+    correlates = []
+    while start + length_preamble <= length:
+        the_wave = wave[start : start + length_preamble]
+        correlate = np.dot(the_wave, preamble_seq)
+        #if(abs(correlate) >= args.threshold):
+        #    break
+        correlates.append(correlate)
+        start += 1
+    print(np.argmax(correlates))
+    plt.subplot(1, 2, 1)
+    plt.plot(correlates)
+    plt.subplot(1, 2, 2)
+    plt.plot(wave)
+    plt.show()
+    return start
+
+def demodulate_one(args, wave):
+    '''
+    描述：获取主导频率来解码一个bit
+    参数：全局参数，波---numpy格式的一维数组
+    返回：0-1比特
+    '''
+    fourier_result = np.abs(np.fft.fft(wave))
+    length = len(fourier_result)
+    fourier_result = fourier_result[0 : length // 2]
+    max_place = np.argmax(fourier_result)
+    max_frequency = round(max_place * args.framerate / length)
+    dist_0 = abs(max_frequency - args.frequency_0)
+    dist_1 = abs(max_frequency - args.frequency_1)
+    if dist_0 < dist_1:
         return 0
     else: 
         return 1
+
 
 def demodulation(args, wave):
     '''
@@ -50,20 +83,15 @@ def demodulation(args, wave):
     参数：全局参数，波---numpy格式的一维数组
     返回：0-1比特信号
     '''
+    length_one = round(args.framerate * args.window_length)
+    length = len(wave)
+    start = 0
     result = []
-    window_length = round(args.framerate * args.window_length)
-    start_place = 0
-    while start_place < len(wave):
-        if start_place + window_length <= len(wave):
-            length = window_length
-        else: 
-            length = len(wave) - start_place
-            
-        sub_wave = wave[start_place: start_place + length - 1]
-        dominate = get_dominate_frequency(args, sub_wave)
-        result.append(dominate)
-        start_place += length
-
+    while(start + length_one <= length):
+        sub_wave = wave[start : start + length_one]
+        the_bit = demodulate_one(args, sub_wave)
+        result.append(the_bit)
+        start += length_one
     return result
 
 if __name__ == '__main__':
@@ -73,13 +101,14 @@ if __name__ == '__main__':
     original_info = '绿罗马帝国强大！1453征服拜占庭！Ceddin deden， neslin baban！'
     original_seq = string_encode(original_info)
     original_seq = args.preamble + original_seq
-
     #the_wave = modulation(args, original_seq)
     #save_wave(the_wave, framerate = args.framerate, sample_width = args.sample_width, nchannels = args.nchannels, save_base = 'send', file_name = 'kebab.wav')
-    
-    get_wave = load_wave(save_base = 'receive', file_name = 'output.wav')
     #get_wave = load_wave(save_base = 'send', file_name = 'kebab.wav')
-    get_seq = demodulation(args, get_wave)
+    #get_wave = np.append(np.zeros(100000), get_wave)
+    get_wave = load_wave(save_base = 'receive', file_name = 'output.wav')
+    place = get_window_start(args, get_wave)
+    print(place)
+    get_seq = demodulation(args, get_wave[place:])
     packet, place = divide_packets(args, get_seq)
     result = string_decode(packet)
     print(original_info)
