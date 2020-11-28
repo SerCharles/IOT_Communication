@@ -17,8 +17,8 @@ def init_args():
     parser = argparse.ArgumentParser(description="Choose the parameters")
 
     #0和1的频率
-    parser.add_argument("--frequency_0", type = int, default = 10000)
-    parser.add_argument("--frequency_1", type = int, default = 20000)
+    parser.add_argument("--frequency_0", type = int, default = 7500)
+    parser.add_argument("--frequency_1", type = int, default = 10000)
 
     #采样频率，振幅，宽度等通用设置
     parser.add_argument("--framerate", type = int, default = 48000)

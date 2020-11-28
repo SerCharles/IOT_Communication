@@ -51,12 +51,12 @@ def get_window_start(args, wave):
             real_wave_start_place = start
         correlates.append(correlate)
         start += 1
-    return real_wave_start_place + np.argmax(correlates[real_wave_start_place:real_wave_start_place+4000])
-    #plt.subplot(1, 2, 1)
-    #plt.plot(correlates)
-    #plt.subplot(1, 2, 2)
-    #plt.plot(wave)
-    #plt.show()
+    place = real_wave_start_place + np.argmax(correlates[real_wave_start_place:real_wave_start_place+4000])
+    print(place)
+    plt.plot(correlates)
+    plt.show()
+    return place
+
 
 def demodulate_one(args, wave):
     '''
@@ -65,7 +65,8 @@ def demodulate_one(args, wave):
     返回：0-1比特
     '''
     fourier_result = np.abs(np.fft.fft(wave))
-    plt.plot(fourier_result)
+    #plt.plot(fourier_result)
+    #plt.show()
     length = len(fourier_result)
     fourier_result = fourier_result[0 : length // 2]
     max_place = np.argmax(fourier_result)
@@ -109,9 +110,13 @@ if __name__ == '__main__':
     get_wave = load_wave(save_base = 'receive', file_name = 'output.wav')
     place = get_window_start(args, get_wave)
     get_seq = demodulation(args, get_wave[place:])
+    get_seq = get_seq[ : len(original_seq)]
+    error = np.sum(get_seq != original_seq) / len(original_seq)
+    print("{:.4f}%".format(error * 100))
+
+
     packet, place = divide_packets(args, get_seq)
     result = string_decode(packet)
     print(original_info)
     print(result)
-    print(place)
     
