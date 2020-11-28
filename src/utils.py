@@ -25,7 +25,7 @@ def init_args():
     parser.add_argument("--sample_width", type = int, default = 2)
     parser.add_argument("--nchannels", type = int, default = 1)
     parser.add_argument("--volume", type = float, default = 20000.0)
-    parser.add_argument("--threshold", type = float, default = 2.1e11)
+    parser.add_argument("--threshold", type = float, default = 1e10)
     parser.add_argument("--start_place", type = int, default = 0)
 
     #单个窗口的长度(单位秒)
