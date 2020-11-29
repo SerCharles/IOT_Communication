@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
-from utils import load_wave, save_wave, init_args, generate_random_seq, compare_seqs, string_encode, string_decode, divide_packets, windowed_fft
+from utils import *
 import statsmodels.tsa.api as smt 
 
 def generate_pulse(framerate, frequency, volume, start_place, duration):
@@ -51,10 +51,8 @@ def get_window_start(args, wave):
             real_wave_start_place = start
         correlates.append(correlate)
         start += 1
-    place = real_wave_start_place + np.argmax(correlates[real_wave_start_place:real_wave_start_place+4000])
+    place = real_wave_start_place + np.argmax(correlates[real_wave_start_place:real_wave_start_place + length_preamble])
     print(place)
-    plt.plot(correlates)
-    plt.show()
     return place
 
 
@@ -102,20 +100,25 @@ if __name__ == '__main__':
     args = init_args()
     original_info = '绿罗马帝国强大！1453征服拜占庭！Ceddin deden， neslin baban！'
     original_seq = string_encode(original_info)
+
+    #TODO:完整的蓝牙包，分包机制
     original_seq = args.preamble + original_seq
-    #the_wave = modulation(args, original_seq)
-    #save_wave(the_wave, framerate = args.framerate, sample_width = args.sample_width, nchannels = args.nchannels, save_base = 'send', file_name = 'kebab.wav')
-    #get_wave = load_wave(save_base = 'send', file_name = 'kebab.wav')
-    #get_wave = np.append(np.zeros(100000), get_wave)
-    get_wave = load_wave(save_base = 'receive', file_name = 'output.wav')
+
+    #get_wave = load_wave(save_base = args.save_base_send, file_name = 'kebab.wav')
+    get_wave = load_wave(save_base = args.save_base_receive, file_name = 'output.wav')
     place = get_window_start(args, get_wave)
     get_seq = demodulation(args, get_wave[place:])
+
+    #临时代码，到时候应该用蓝牙包解码
     get_seq = get_seq[ : len(original_seq)]
+
+
+    #错误率
     error = np.sum(get_seq != original_seq) / len(original_seq)
     print("{:.4f}%".format(error * 100))
 
-
-    packet, place = divide_packets(args, get_seq)
+    #TODO：用蓝牙包结构解码
+    packet, place = decode_bluetooth_packet(args, get_seq)
     result = string_decode(packet)
     print(original_info)
     print(result)

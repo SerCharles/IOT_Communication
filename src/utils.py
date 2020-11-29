@@ -25,7 +25,6 @@ def init_args():
     parser.add_argument("--sample_width", type = int, default = 2)
     parser.add_argument("--nchannels", type = int, default = 1)
     parser.add_argument("--volume", type = float, default = 20000.0)
-    parser.add_argument("--threshold", type = float, default = 1e10)
     parser.add_argument("--start_place", type = int, default = 0)
 
     #单个窗口的长度(单位秒)
@@ -41,6 +40,9 @@ def init_args():
     
     #前导码
     args.preamble = [1, 0, 1, 0, 1, 0, 1, 0]
+
+    #解码用
+    args.threshold = args.volume ** 2
     return args
 
 def save_wave(my_wave, framerate = 44100, sample_width = 2, nchannels = 1, save_base = 'sound', file_name = 'pulse.wav'):
@@ -151,14 +153,21 @@ def string_decode(bit_list):
     result = bytes.decode(byte_list, encoding = "utf-8")
     return result
 
-
-def divide_packets(args, packet):
+def encode_bluetooth_packet(args, seq):
     '''
-    描述：将一大段录音根据前导码拆分成多个包
-    参数：全局参数，整个录音的解码结果
-    返回：packet, place
-        packet是拆解完的每个包的内容，去除前导码
-        place是每个包的开始位置，也就是前导码第一个字符的为主
+    TODO：蓝牙包编码
+    描述：生成蓝牙包
+    参数：全局参数，0-1序列
+    返回：完整的蓝牙包(0-1序列)(包括分包)
+    '''
+    return seq
+
+def decode_bluetooth_packet(args, packet):
+    '''
+    TODO：蓝牙包解码
+    描述：将整个蓝牙包进行拆分
+    参数：全局参数，蓝牙包
+    返回：经过修正后的内容
     '''
     i = 0
     preamble_place = -1
@@ -174,18 +183,3 @@ def divide_packets(args, packet):
     the_packet = packet[preamble_place + 8: ]
     the_place = preamble_place
     return the_packet, the_place
-
-def windowed_fft(wave, window_size = 10):
-    '''
-    描述：滑动窗口FFT
-    参数：波, 窗口大小
-    返回：滑动窗口FFT后的结果
-    '''
-    fourier_result = abs(np.fft.fft(wave))
-    result = []
-    for i in range(len(fourier_result)):
-        start = max(0, i - window_size // 2)
-        end = min(len(fourier_result) - 1, i + window_size // 2)
-        num = np.mean(fourier_result[start:end])
-        result.append(num)
-    return result
