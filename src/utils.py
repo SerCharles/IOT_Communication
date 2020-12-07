@@ -19,24 +19,17 @@ def init_args():
     """
     parser = argparse.ArgumentParser(description="Choose the parameters")
 
-<<<<<<< HEAD
     #0和1的频率
     parser.add_argument("--frequency_0", type = int, default = 4000)
     parser.add_argument("--frequency_1", type = int, default = 6000)
-=======
-    # 0和1的频率
-    parser.add_argument("--frequency_0", type=int, default=7500)
-    parser.add_argument("--frequency_1", type=int, default=10000)
->>>>>>> 6b09c8251c93b1d339966a9ae630b04320ccc69d
 
     # 采样频率，振幅，宽度等通用设置
-    parser.add_argument("--framerate", type=int, default=44100)
-    parser.add_argument("--sample_width", type=int, default=2)
-    parser.add_argument("--nchannels", type=int, default=1)
-    parser.add_argument("--volume", type=float, default=20000.0)
-    parser.add_argument("--start_place", type=int, default=0)
+    parser.add_argument("--framerate", type=int, default = 48000)
+    parser.add_argument("--sample_width", type=int, default = 2)
+    parser.add_argument("--nchannels", type=int, default = 1)
+    parser.add_argument("--volume", type=float, default = 20000.0)
+    parser.add_argument("--start_place", type=int, default = 0)
 
-<<<<<<< HEAD
     #单个窗口的长度(单位秒)
     parser.add_argument("--window_length", type = float, default = 2.5e-2)
 
@@ -61,24 +54,6 @@ def init_args():
 
     #解码用
     args.threshold = 2e11
-=======
-    # 单个窗口的长度(单位秒)
-    parser.add_argument("--window_length", type=float, default=0.01)
-
-    # 一个包最长长度(多少个比特)
-    parser.add_argument("--packet_length", type=float, default=1000)
-
-    # 保存和接收的文件夹名称
-    parser.add_argument("--save_base_send", type=str, default='send')
-    parser.add_argument("--save_base_receive", type=str, default='receive')
-    args = parser.parse_args()
-
-    # 前导码
-    args.preamble = [1, 0, 1, 0, 1, 0, 1, 0]
-
-    # 解码用
-    args.threshold = 1e10  # args.volume ** 2
->>>>>>> 6b09c8251c93b1d339966a9ae630b04320ccc69d
     return args
 
 
@@ -194,7 +169,6 @@ def string_decode(bit_list):
     result = bytes.decode(byte_list, encoding="utf-8")
     return result
 
-<<<<<<< HEAD
 def bit_to_int(seq):
     '''
     描述：把八bit二进制转化成数字
@@ -244,42 +218,22 @@ def get_accuracy(original_seq, get_seq):
             correct += 1
     accuracy = correct / len(original_seq)
     return accuracy
-=======
->>>>>>> 6b09c8251c93b1d339966a9ae630b04320ccc69d
 
 def encode_bluetooth_packet(args, seq):
-    """
+    '''
     TODO：蓝牙包编码
     描述：生成蓝牙包
     参数：全局参数，0-1序列
     返回：完整的蓝牙包(0-1序列)(包括分包)
-    """
+    '''
     return seq
 
 
 def decode_bluetooth_packet(args, packet):
-    """
+    '''
     TODO：蓝牙包解码
     描述：将整个蓝牙包进行拆分
     参数：全局参数，蓝牙包
     返回：经过修正后的内容
-<<<<<<< HEAD
     '''
     pass
-=======
-    """
-    i = 0
-    preamble_place = -1
-    # 找前导码
-    while i < len(packet):
-        if i + 8 <= len(packet):
-            the_eight = packet[i: i + 8]
-            if the_eight == args.preamble:
-                preamble_place = i
-                break
-        i += 1
-
-    the_packet = packet[preamble_place + 8:]
-    the_place = preamble_place
-    return the_packet, the_place
->>>>>>> 6b09c8251c93b1d339966a9ae630b04320ccc69d
