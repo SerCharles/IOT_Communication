@@ -27,6 +27,7 @@ class Sender:
             return
         
         original_seq = string_encode(seq)
+        # original_seq = np.append(args.preamble, np.zeros(100))
         original_seq = self.args.preamble + original_seq
         save_place += '.wav'
         print("The original seq is:\n", original_seq)
