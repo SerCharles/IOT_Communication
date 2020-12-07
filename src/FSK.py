@@ -125,7 +125,7 @@ def demodulation(args, wave):
     correlates = get_correlates(args, wave)
     start = 0
     packet_results = []
-    while True:
+    while start < len(wave):
         #找起始位置
         start_place = get_window_start(args, start, correlates)
         print(start_place)
@@ -153,7 +153,12 @@ def demodulation(args, wave):
         start = packet_end
     return packet_results
 
-if __name__ == '__main__':
+def test_fsk():
+    '''
+    描述：根据助教要求测试FSK
+    参数：无
+    返回：无
+    '''
     args = init_args()
     original_seq = get_original_seq(args)
     get_wave = load_wave(save_base = args.save_base_receive, file_name = 'res.wav')
@@ -163,3 +168,18 @@ if __name__ == '__main__':
         accuracy = get_accuracy(original_seq[i], get_seq[i])
         accuracy_list.append(accuracy)
         print("Data {}, Accuracy {:.4f}%".format(i + 1, accuracy * 100))
+
+if __name__ == '__main__':
+    #目前是编码，解码的示例
+    args = init_args()
+    original_seq = string_encode('ceddin deden!')
+    length = len(original_seq)
+    bits = int_to_bit(length)
+    original_seq = args.preamble + bits + original_seq
+    the_wave = modulation(args, original_seq)
+    save_wave(the_wave, save_base = args.save_base_send, file_name = 'kebab.wav')
+    
+    get_wave = load_wave(save_base = args.save_base_send, file_name = 'kebab.wav')
+    get_seq = demodulation(args, get_wave)
+    result = string_decode(get_seq[0])
+    print(result)

@@ -186,6 +186,17 @@ def bit_to_int(seq):
         num += (seq[7 - i] << i)
     return num
 
+def int_to_bit(num):
+    '''
+    描述：把数字转化成八bit二进制
+    参数：数字
+    返回：二进制
+    '''
+    seq = []
+    for i in range(8):
+        seq.append((num >> (7 - i)) & 1)
+    return seq
+
 def get_original_seq(args):
     '''
     描述：返回original seq
