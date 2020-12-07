@@ -7,6 +7,8 @@ import struct
 import matplotlib.pyplot as plt
 from scipy import signal
 import argparse
+import csv
+
 
 def init_args():
     '''
@@ -17,8 +19,8 @@ def init_args():
     parser = argparse.ArgumentParser(description="Choose the parameters")
 
     #0和1的频率
-    parser.add_argument("--frequency_0", type = int, default = 7500)
-    parser.add_argument("--frequency_1", type = int, default = 10000)
+    parser.add_argument("--frequency_0", type = int, default = 4000)
+    parser.add_argument("--frequency_1", type = int, default = 6000)
 
     #采样频率，振幅，宽度等通用设置
     parser.add_argument("--framerate", type = int, default = 48000)
@@ -28,21 +30,29 @@ def init_args():
     parser.add_argument("--start_place", type = int, default = 0)
 
     #单个窗口的长度(单位秒)
-    parser.add_argument("--window_length", type = float, default = 0.01)
+    parser.add_argument("--window_length", type = float, default = 2.5e-2)
 
     #一个包最长长度(多少个比特)
-    parser.add_argument("--packet_length", type = float, default = 1000)
+    parser.add_argument("--packet_length", type = int, default = 1000)
 
     #保存和接收的文件夹名称
     parser.add_argument("--save_base_send", type = str, default = 'send')
     parser.add_argument("--save_base_receive", type = str, default = 'receive')
+    parser.add_argument("--original_place", type = str, default = 'content.csv')
+
+
+    #包长度是几个bit
+    parser.add_argument("--packet_head_length", type = int, default = 8)
+
+    #测不测试（是否显示图啥的）
+    parser.add_argument("--test", type = int, default = 0)
     args = parser.parse_args()
     
     #前导码
-    args.preamble = [1, 0, 1, 0, 1, 0, 1, 0]
+    args.preamble = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
 
     #解码用
-    args.threshold = args.volume ** 2
+    args.threshold = 2e11
     return args
 
 def save_wave(my_wave, framerate = 44100, sample_width = 2, nchannels = 1, save_base = 'sound', file_name = 'pulse.wav'):
@@ -153,6 +163,56 @@ def string_decode(bit_list):
     result = bytes.decode(byte_list, encoding = "utf-8")
     return result
 
+def bit_to_int(seq):
+    '''
+    描述：把八bit二进制转化成数字
+    参数：二进制
+    返回：数字
+    '''
+    if len(seq) > 8:
+        seq = seq[ : 8]
+    elif len(seq) < 8:
+        for i in range(8 - len(seq)):
+            seq.append(0)
+    num = 0
+    for i in range(8):
+        num += (seq[7 - i] << i)
+    return num
+
+def get_original_seq(args):
+    '''
+    描述：返回original seq
+    参数：全局参数
+    返回：original seq
+    '''
+    original_seq = []
+    with open(args.original_place, 'r') as f:
+        reader = csv.reader(f)
+        result = list(reader)
+        for i in range(5, len(result)):
+            seq = []
+            for j in range(4, len(result[i])):
+                try:
+                    seq.append(int(result[i][j]))
+                except:
+                    pass
+            original_seq.append(seq)
+    return original_seq
+
+def get_accuracy(original_seq, get_seq):
+    '''
+    描述：计算准确率
+    参数：原始信号，新的信号
+    返回：无
+    '''
+    length = min(len(original_seq), len(get_seq))
+    correct = 0
+    for i in range(length):
+        if(original_seq[i] == get_seq[i]):
+            correct += 1
+    accuracy = correct / len(original_seq)
+    return accuracy
+
 def encode_bluetooth_packet(args, seq):
     '''
     TODO：蓝牙包编码
@@ -169,17 +229,4 @@ def decode_bluetooth_packet(args, packet):
     参数：全局参数，蓝牙包
     返回：经过修正后的内容
     '''
-    i = 0
-    preamble_place = -1
-    #找前导码
-    while i < len(packet):
-        if(i + 8 <= len(packet)):
-            the_eight = packet[i : i + 8]
-            if(the_eight == args.preamble):
-                preamble_place = i
-                break
-        i += 1
-
-    the_packet = packet[preamble_place + 8: ]
-    the_place = preamble_place
-    return the_packet, the_place
+    pass
