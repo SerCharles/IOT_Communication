@@ -18,11 +18,11 @@ def generate_pulse(framerate, frequency, volume, start_place, duration):
 
 
 def modulation(args, bits):
-    '''
+    """
     描述：FSK调制算法
     参数：全局参数, 0-1比特信号（规定比特信号长度小于等于一个包的限制）
     返回：得到的波---numpy格式的一维数组
-    '''
+    """
     result_wave = np.empty(shape=(1, 0))
     for bit in bits:
         if bit == 0:
