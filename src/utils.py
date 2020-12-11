@@ -10,8 +10,6 @@ import argparse
 import csv
 
 
-
-
 def init_args():
     """
     描述：加载全局设置---窗口长度，0和1对应的频率，采样频率振幅等其他参数
@@ -20,40 +18,39 @@ def init_args():
     """
     parser = argparse.ArgumentParser(description="Choose the parameters")
 
-    #0和1的频率
-    parser.add_argument("--frequency_0", type = int, default = 4000)
-    parser.add_argument("--frequency_1", type = int, default = 6000)
+    # 0和1的频率
+    parser.add_argument("--frequency_0", type=int, default=4000)
+    parser.add_argument("--frequency_1", type=int, default=6000)
 
     # 采样频率，振幅，宽度等通用设置
-    parser.add_argument("--framerate", type=int, default = 48000)
-    parser.add_argument("--sample_width", type=int, default = 2)
-    parser.add_argument("--nchannels", type=int, default = 1)
-    parser.add_argument("--volume", type=float, default = 20000.0)
-    parser.add_argument("--start_place", type=int, default = 0)
+    parser.add_argument("--framerate", type=int, default=48000)
+    parser.add_argument("--sample_width", type=int, default=2)
+    parser.add_argument("--nchannels", type=int, default=1)
+    parser.add_argument("--volume", type=float, default=20000.0)
+    parser.add_argument("--start_place", type=int, default=0)
 
-    #单个窗口的长度(单位秒)
-    parser.add_argument("--window_length", type = float, default = 2.5e-2)
+    # 单个窗口的长度(单位秒)
+    parser.add_argument("--window_length", type=float, default=2.5e-2)
 
-    #一个包最长长度(多少个比特)
-    parser.add_argument("--packet_length", type = int, default = 1000)
+    # 一个包最长长度(多少个比特)
+    parser.add_argument("--packet_length", type=int, default=1000)
 
-    #保存和接收的文件夹名称
-    parser.add_argument("--save_base_send", type = str, default = 'send')
-    parser.add_argument("--save_base_receive", type = str, default = 'receive')
-    parser.add_argument("--original_place", type = str, default = 'content.csv')
+    # 保存和接收的文件夹名称
+    parser.add_argument("--save_base_send", type=str, default='send')
+    parser.add_argument("--save_base_receive", type=str, default='receive')
+    parser.add_argument("--original_place", type=str, default='content.csv')
 
+    # 包长度是几个bit
+    parser.add_argument("--packet_head_length", type=int, default=8)
 
-    #包长度是几个bit
-    parser.add_argument("--packet_head_length", type = int, default = 8)
-
-    #测不测试（是否显示图啥的）
-    parser.add_argument("--test", type = int, default = 0)
+    # 测不测试（是否显示图啥的）
+    parser.add_argument("--test", type=int, default=0)
     args = parser.parse_args()
-    
-    #前导码
-    args.preamble = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
 
-    #解码用
+    # 前导码
+    args.preamble = [0, 1] * 10
+
+    # 解码用
     args.threshold = 2e11
     return args
 
@@ -170,6 +167,7 @@ def string_decode(bit_list):
     result = bytes.decode(byte_list, encoding="utf-8")
     return result
 
+
 def bit_to_int(seq):
     '''
     描述：把八bit二进制转化成数字
@@ -177,7 +175,7 @@ def bit_to_int(seq):
     返回：数字
     '''
     if len(seq) > 8:
-        seq = seq[ : 8]
+        seq = seq[: 8]
     elif len(seq) < 8:
         for i in range(8 - len(seq)):
             seq.append(0)
@@ -185,6 +183,7 @@ def bit_to_int(seq):
     for i in range(8):
         num += (seq[7 - i] << i)
     return num
+
 
 def int_to_bit(num):
     '''
@@ -196,6 +195,7 @@ def int_to_bit(num):
     for i in range(8):
         seq.append((num >> (7 - i)) & 1)
     return seq
+
 
 def get_original_seq(args):
     '''
@@ -217,6 +217,7 @@ def get_original_seq(args):
             original_seq.append(seq)
     return original_seq
 
+
 def get_accuracy(original_seq, get_seq):
     '''
     描述：计算准确率
@@ -226,10 +227,11 @@ def get_accuracy(original_seq, get_seq):
     length = min(len(original_seq), len(get_seq))
     correct = 0
     for i in range(length):
-        if(original_seq[i] == get_seq[i]):
+        if (original_seq[i] == get_seq[i]):
             correct += 1
     accuracy = correct / len(original_seq)
     return accuracy
+
 
 def encode_bluetooth_packet(args, seq):
     '''
@@ -238,14 +240,33 @@ def encode_bluetooth_packet(args, seq):
     参数：全局参数，0-1序列
     返回：完整的蓝牙包(0-1序列)(包括分包)
     '''
-    return seq
+    encoded_seq = string_encode(seq)
+    encoded_len = len(encoded_seq)
+    packet_payload_len = 40
+    packets_cnt = int(encoded_len / packet_payload_len) if encoded_len % packet_payload_len == 0 \
+        else int(encoded_len / packet_payload_len) + 1
+    blank_len = 10
+    bluetooth_packets_seq = []
+    bluetooth_packets_seq += ([0] * blank_len)
+    # 分包
+    for i in range(packets_cnt):
+        bluetooth_packets_seq += args.preamble
+        bluetooth_packets_seq += (int_to_bit(packet_payload_len if i != packets_cnt - 1
+                                             else encoded_len - i * packet_payload_len))
+        bluetooth_packets_seq += (encoded_seq[i * packet_payload_len: min((i + 1) * packet_payload_len, encoded_len)])
+        bluetooth_packets_seq += ([0] * blank_len)
+
+    return bluetooth_packets_seq
 
 
-def decode_bluetooth_packet(args, packet):
+def decode_bluetooth_packet(args, packets):
     '''
     TODO：蓝牙包解码
     描述：将整个蓝牙包进行拆分
     参数：全局参数，蓝牙包
     返回：经过修正后的内容
     '''
-    pass
+    seq = []
+    for packet in packets:
+        seq += packet
+    return string_decode(seq)
