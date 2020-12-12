@@ -135,6 +135,9 @@ def demodulation(args, wave):
         # 找起始位置
         start_place = get_window_start(args, start, correlates)
         print(start_place)
+        if args.beep_beep and (1.5 * args.framerate <= start_place <= 2.3 * args.framerate):
+            start += int(0.2 * args.framerate)
+            continue
         if start_place < 0:
             break
         # 之后28个bit---前导码20bit，8bit长度

@@ -10,12 +10,13 @@ from distance.beepbeep import calculate_distance
 app = Flask(__name__, static_folder='static', static_url_path='')
 program_args = utils.init_args()
 program_args.beep_beep = True
-program_args.threshold = 5e10
+# program_args.threshold = 5e10
 
 paired_files = [{}, {}]
 server_state = {
     "process": []
 }
+image_list = []
 
 
 def dump_file_info(file):

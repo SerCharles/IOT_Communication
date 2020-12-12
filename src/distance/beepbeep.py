@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import random
+import scipy.signal as signal
 from typing import Dict, Union
 
 from scipy.io import wavfile
@@ -26,12 +27,16 @@ def calculate_distance(args, bytes1, bytes2) -> Dict[str, Union[float, int]]:
     temp1 = "_tmp_a_" + str(beep_index) + "_" + str(random.randint(0, 32768)) + ".wav"
     temp2 = "_tmp_b_" + str(beep_index) + "_" + str(random.randint(0, 32768)) + ".wav"
     beep_index += 1
+    # b, a = signal.butter(8, [2 * (args.frequency_0 - 200) / args.framerate,
+    #                          2 * (args.frequency_1 + 200) / args.framerate], "bandpass")
     with open(temp1, "wb") as f:
         f.write(bytes1)
     fs, wave1 = wavfile.read(temp1)
+    # wave1 = signal.filtfilt(b, a, wave1)
     with open(temp2, "wb") as f:
         f.write(bytes2)
     fs, wave2 = wavfile.read(temp2)
+    # wave2 = signal.filtfilt(b, a, wave2)
     try:
         os.remove(temp1)
         os.remove(temp2)
