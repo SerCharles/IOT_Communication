@@ -24,21 +24,28 @@ class Receiver:
         参数：无
         返回：无
         """
+        start = time.time_ns()
         get_wave = load_wave(save_base=self.args.save_base_receive, file_name=self.entry.get()+'.wav')
+        end = time.time_ns()
+        print('读取文件耗时：', (end-start)/1e6, 'ms')
         if len(get_wave.shape) == 2:
             get_wave = get_wave[:, 0]
+
+        start = time.time_ns()
         packets = demodulation(self.args, get_wave)
         count, result = decode_bluetooth_packet(self.args, packets)
+        end = time.time_ns()
+        print('解码文本耗时：', (end-start)/1e6, 'ms')
 
         tkinter.messagebox.showinfo('传输结果', '蓝牙包成功解码数量：{}/{}\n解码信息：{}'
                                     .format(count, len(packets), result))
 
     def init_ui(self):
-        '''
+        """
         描述：初始化gui
         参数：无
         返回：无
-        '''
+        """
         self.window = Tk()
         self.label = Label(self.window, text="请输入待解码文件名（不含.wav）")
         self.label.grid(row=1, column=0, stick=W, pady=10)

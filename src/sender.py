@@ -41,11 +41,12 @@ class Sender:
         p.terminate()
 
     def send_signal(self):
-        '''
+        """
         描述：保存音频文件
         参数：无
         返回：无
-        '''
+        """
+        start = time.time_ns()
         seq = self.entry1.get()
         save_place = self.entry2.get()
         if len(seq) == 0:
@@ -63,15 +64,20 @@ class Sender:
         save_wave(the_wave, framerate=self.args.framerate, sample_width=self.args.sample_width,
                   nchannels=self.args.nchannels,
                   save_base=self.args.save_base_send, file_name=save_place)
+        end = time.time_ns()
+        print('编码信号耗时：', (end-start)/1e6, 'ms')
+        start = time.time_ns()
         self.play_wave(save_place)
+        end = time.time_ns()
+        print('发送信号耗时：', (end-start)/1e6, 'ms')
         # self.window.destroy()
 
     def init_ui(self):
-        '''
+        """
         描述：初始化gui
         参数：无
         返回：无
-        '''
+        """
         self.window = Tk()
         self.label1 = Label(self.window, text="请输入数据")
         self.label1.grid(row=0, column=0, stick=W, pady=10)

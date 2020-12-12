@@ -243,12 +243,11 @@ def get_accuracy(original_seq, get_seq):
 
 
 def encode_bluetooth_packet(args, seq):
-    '''
-    TODO：蓝牙包编码
+    """
     描述：生成蓝牙包
     参数：全局参数，0-1序列
     返回：完整的蓝牙包(0-1序列)(包括分包)
-    '''
+    """
     packet_payload_len = 40
     packets_cnt = 0
     blank_len = 5
@@ -268,12 +267,11 @@ def encode_bluetooth_packet(args, seq):
 
 
 def decode_bluetooth_packet(args, packets):
-    '''
-    TODO：蓝牙包解码
+    """
     描述：将整个蓝牙包进行拆分
     参数：全局参数，蓝牙包
     返回：经过修正后的内容
-    '''
+    """
     result = ''
     count = 0
     for packet, _ in packets:
