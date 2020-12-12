@@ -37,8 +37,21 @@ class Receiver:
         end = time.time_ns()
         print('解码文本耗时：', (end-start)/1e6, 'ms')
 
-        tkinter.messagebox.showinfo('传输结果', '蓝牙包成功解码数量：{}/{}\n解码信息：{}'
-                                    .format(count, len(packets), result))
+        answer_wave = load_wave(save_base=self.args.save_base_send, file_name='sgl.wav')
+        if len(get_wave.shape) == 2:
+            answer_wave = answer_wave[:, 0]
+        answer_packets = demodulation(self.args, answer_wave)
+        answer_count, answer_result = decode_bluetooth_packet(self.args, answer_packets)
+        bit_count = 0
+        bit_right = 0
+        for packet_tuple, answer_packet_tuple in zip(packets, answer_packets):
+            packet = packet_tuple[0]
+            answer_packet = answer_packet_tuple[0]
+            for i, j in zip(packet, answer_packet):
+                bit_right += (i == j)
+            bit_count += len(answer_packet)
+        tkinter.messagebox.showinfo('传输结果', '蓝牙包成功解码数量：{}/{}\n解码信息：{}\n实际信息：{}\n比特正确率：{:.4f}'
+                                    .format(count, answer_count, result, answer_result, bit_right/bit_count))
 
     def init_ui(self):
         """
