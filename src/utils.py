@@ -276,7 +276,7 @@ def decode_bluetooth_packet(args, packets):
     '''
     result = ''
     count = 0
-    for packet in packets:
+    for packet, _ in packets:
         try:
             result += ' \"{}\" '.format(string_decode(packet))
             count += 1
