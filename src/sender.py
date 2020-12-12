@@ -26,14 +26,16 @@ class Sender:
             tkinter.messagebox.showinfo('错误','保存的位置不能为空！')
             return
         
-        original_seq = string_encode(seq)
+        # original_seq = string_encode(seq)
         # original_seq = np.append(args.preamble, np.zeros(100))
-        original_seq = self.args.preamble + original_seq
+        # original_seq = self.args.preamble + original_seq
+        original_seq = encode_bluetooth_packet(args, seq)
         save_place += '.wav'
         print("The original seq is:\n", original_seq)
 
         the_wave = modulation(self.args, original_seq)
-        save_wave(the_wave, framerate = self.args.framerate, sample_width = self.args.sample_width, nchannels = self.args.nchannels, save_base = self.args.save_base_send, file_name = save_place)
+        save_wave(the_wave, framerate = self.args.framerate, sample_width = self.args.sample_width, nchannels = self.args.nchannels,
+            save_base = self.args.save_base_send, file_name = save_place)
         self.window.destroy()
 
     def init_ui(self):
