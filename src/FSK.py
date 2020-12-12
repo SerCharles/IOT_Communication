@@ -142,6 +142,8 @@ def demodulation(args, wave):
         #解码长度
         length_result = demodulate_packet(args, length_wave)
         length = bit_to_int(length_result)
+        if args.beep_beep:
+            length = 0
         if length < 0:
             break
 

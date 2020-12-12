@@ -51,6 +51,7 @@ def init_args():
     parser.add_argument("--delay_b", type=int, default=3)
     parser.add_argument("--record_len", type=int, default=5)
     parser.add_argument("--beep_wave", type=str, default="distance/beep.wav")
+    parser.add_argument("--beep_beep", type=bool, default=False)
 
     #测不测试（是否显示图啥的）
     parser.add_argument("--test", type = int, default = 0)

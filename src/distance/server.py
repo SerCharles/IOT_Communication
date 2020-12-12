@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
 import threading
 import time
 
@@ -8,15 +7,10 @@ from flask import Flask, request, jsonify
 import utils
 from distance.beepbeep import calculate_distance
 
-UPLOAD_FOLDER = 'upload'
-app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app = Flask(__name__, static_folder='static', static_url_path='')
 program_args = utils.init_args()
-
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
-else:
-    pass
+program_args.beep_beep = True
+program_args.threshold = 5e10
 
 paired_files = [{}, {}]
 server_state = {
@@ -52,6 +46,15 @@ def process(file1, file2):
     pass
 
 
+@app.route('/iot/reset', methods=['GET'])
+def reset():
+    paired_files[0] = {}
+    paired_files[1] = {}
+    return jsonify({
+        "success": True,
+    })
+
+
 @app.route('/iot/status', methods=['GET'])
 def get_status():
     ret = {}
@@ -73,7 +76,10 @@ def upload_file(side):
     global paired_files
     file = request.files['file']
     if side not in ["a", "b"]:
-        return "side unknown", 400
+        return jsonify({
+            "success": False,
+            "message": "unknown side",
+        }), 400
     if file:
         print("Received from side", side, ":", file.filename)
         file_info = {
@@ -88,7 +94,13 @@ def upload_file(side):
         if paired_files[0] and paired_files[1]:
             process(paired_files[0], paired_files[1])
             paired_files = [None, None]
-        return "ok", 200
+        return jsonify({
+            "success": True,
+        })
+    return jsonify({
+        "success": False,
+        "message": "file not attached",
+    }), 400
 
 
 if __name__ == "__main__":
