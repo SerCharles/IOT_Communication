@@ -33,6 +33,7 @@ def modulation(args, bits):
         result_wave = np.append(result_wave, y)
     return result_wave
 
+
 def get_correlates(args, wave):
     '''
     参数：全局参数，波
@@ -115,12 +116,13 @@ def demodulate_packet(args, wave):
         start += length_one
     return result
 
+
 def demodulation(args, wave):
-    '''
+    """
     描述：FSK解调算法
     参数：全局参数，波
     返回：各个包的0-1参数
-    '''
+    """
     length_one = round(args.framerate * args.window_length)
     correlates = get_correlates(args, wave)
     start = 0
@@ -147,11 +149,12 @@ def demodulation(args, wave):
         packet_end = length_end + length_one * length
         packet_wave = wave[length_end:packet_end]
         packet_result = demodulate_packet(args, packet_wave)
-        packet_results.append(packet_result)
+        packet_results.append((packet_result, start_place))
 
         #更新位置
         start = packet_end
     return packet_results
+
 
 def test_fsk():
     '''
@@ -165,12 +168,14 @@ def test_fsk():
     get_seq = demodulation(args, get_wave)
     accuracy_list = []
     for i in range(len(original_seq)):
-        accuracy = get_accuracy(original_seq[i], get_seq[i])
+        seq, off = get_seq[i]
+        accuracy = get_accuracy(original_seq[i], seq)
         accuracy_list.append(accuracy)
         print("Data {}, Accuracy {:.4f}%".format(i + 1, accuracy * 100))
 
+
 if __name__ == '__main__':
-    #目前是编码，解码的示例
+    # 目前是编码，解码的示例
     args = init_args()
     original_seq = string_encode('ceddin deden!')
     length = len(original_seq)

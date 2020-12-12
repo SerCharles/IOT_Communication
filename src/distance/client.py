@@ -1,11 +1,12 @@
-import argparse
+# -*- coding: utf-8 -*-
 import os
 import random
+import threading
+import time
 import wave
 
-import requests
-import threading
 import pyaudio
+import requests
 
 from utils import init_args
 
@@ -17,18 +18,21 @@ class RecorderThread(threading.Thread):
         self.args = self_args
         self.filename = filename
         self.client = client
+        self.chunk = 1024
+        self.format = pyaudio.paInt16
 
     def run(self):
         self.recording = True
         frames = []
         recorder = pyaudio.PyAudio()
-        stream = recorder.open(format=self.args.format,
-                               channels=self.args.channels,
+        stream = recorder.open(format=self.format,
+                               channels=self.args.nchannels,
                                rate=self.args.framerate,
                                input=True,
-                               frames_per_buffer=self.args.chunk)
-        while self.recording:
-            data = stream.read(self.args.chunk)
+                               frames_per_buffer=self.chunk)
+        start_time = time.time()
+        while self.recording and (time.time() - start_time < self.args.record_len):
+            data = stream.read(self.chunk)
             frames.append(data)
 
         stream.stop_stream()
@@ -37,13 +41,17 @@ class RecorderThread(threading.Thread):
 
         p = pyaudio.PyAudio()
         wf = wave.open(self.filename, 'wb')
-        wf.setnchannels(self.args.channels)
-        wf.setsampwidth(p.get_sample_size(self.args.format))
+        wf.setnchannels(self.args.nchannels)
+        wf.setsampwidth(p.get_sample_size(self.format))
         wf.setframerate(self.args.framerate)
         wf.writeframes(b''.join(frames))
         wf.close()
 
         self.client.upload(self.filename)
+        try:
+            os.remove(self.filename)
+        except:
+            pass
 
 
 class DistanceClient(object):
@@ -54,35 +62,67 @@ class DistanceClient(object):
         self.side = side
         self.url = url
         self.recording = False
-        self.chunk = 1024
         self.format = pyaudio.paInt16
-        self.channels = 1
-        self.framerate = 44100
-        self.offset_a = 1
-        self.offset_b = 3
-        self.audio_len = 0.5
-        self.record_len = 5
+        self.channels = args.nchannels
+        self.framerate = args.framerate
         self.args = args
+        self.wave_file = wave.open(self.args.beep_wave, 'rb')
+        chunks = []
+        data = self.wave_file.readframes(1024)
+        while data != b'':
+            chunks.append(data)
+            data = self.wave_file.readframes(1024)
+        data = b''.join(chunks)
+        self.data = data
 
     def upload(self, filename):
         resp = requests.post(self.url.replace("<side>", self.side),
                              files={"file": open(filename, "rb")})
-        print(resp)
+        if resp.status_code == 200:
+            print(filename, "uploaded")
+        else:
+            print(filename, "failed to upload")
 
     def start_record(self):
-        filename = self.side + "_" + random.randint(0, 255) + ".wav"
+        filename = os.path.join("receive", self.side + "_" + str(random.randint(0, 255)) + ".wav")
         thread = RecorderThread(filename, self.args, self)
         thread.start()
+        return filename
+
+    def play_beep(self):
+        p = pyaudio.PyAudio()
+        stream = p.open(format=p.get_format_from_width(self.wave_file.getsampwidth()),
+                        channels=self.wave_file.getnchannels(),
+                        rate=self.wave_file.getframerate(), output=True)
+        stream.write(self.data)
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
 
     def start(self):
         while True:
-            line = input("Press enter to start a recording")
-            self.start_record()
+            print("Press enter to start recording")
+            line = input("")
+            filename = self.start_record()
+            print("Recording", filename, "started")
+            if self.side == 'a':
+                time.sleep(self.args.delay_a)
+            else:
+                time.sleep(self.args.delay_b)
+            self.play_beep()
             if line == "exit":
                 break
 
 
-if __name__ == "__main__":
+def main():
     args = init_args()
-    DistanceClient(args).start()
+    if args.side != 'a' and args.side != 'b':
+        print("Side must be 'a' or 'b'")
+        return
+    print("Server url:", args.server_url)
+    print("You are side", args.side)
+    DistanceClient(args.server_url, args.side, args).start()
 
+
+if __name__ == "__main__":
+    main()

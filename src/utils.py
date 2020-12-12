@@ -46,6 +46,15 @@ def init_args():
     #包长度是几个bit
     parser.add_argument("--packet_head_length", type = int, default = 8)
 
+    #beep-beep
+    parser.add_argument("--sound_velocity", type=int, default=343)
+    parser.add_argument("--server_url", type=str, default="http://localhost:5000/iot/<side>")
+    parser.add_argument("--side", type=str, default="a")
+    parser.add_argument("--delay_a", type=int, default=1)
+    parser.add_argument("--delay_b", type=int, default=3)
+    parser.add_argument("--record_len", type=int, default=5)
+    parser.add_argument("--beep_wave", type=str, default="distance/beep.wav")
+
     #测不测试（是否显示图啥的）
     parser.add_argument("--test", type = int, default = 0)
     args = parser.parse_args()
