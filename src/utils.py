@@ -263,7 +263,7 @@ def encode_bluetooth_packet(args, seq):
             bluetooth_packets_seq += encoded_seq
             encoded_seq = []
             packets_cnt += 1
-
+    bluetooth_packets_seq += ([2] * blank_len)
     return bluetooth_packets_seq
 
 

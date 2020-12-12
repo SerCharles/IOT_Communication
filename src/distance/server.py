@@ -109,5 +109,20 @@ def upload_file(side):
     }), 400
 
 
+@app.route('/bluetooth', methods=['POST'])
+def get_bluetooth_file():
+    file = request.files['file']
+    if file:
+        print("Received file {}.".format(file.filename))
+        file.save('../receive/output.wav')
+        return jsonify({
+            "success": True,
+        })
+    return jsonify({
+        "success": False,
+        "message": "file not attached",
+    }), 400
+
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)
