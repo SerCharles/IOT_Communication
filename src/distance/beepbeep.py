@@ -33,8 +33,8 @@ def calculate_distance(args, bytes1, bytes2) -> Dict[str, Union[float, int]]:
         f.write(bytes2)
     fs, wave2 = wavfile.read(temp2)
     try:
-        # os.remove(temp_file)
-        pass
+        os.remove(temp1)
+        os.remove(temp2)
     except:
         pass
     # 假设 wave1 和 wave2 分别开始于 ta0, tb2

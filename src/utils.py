@@ -45,7 +45,7 @@ def init_args():
 
     #beep-beep
     parser.add_argument("--sound_velocity", type=int, default=343)
-    parser.add_argument("--server_url", type=str, default="http://localhost:5000/iot/<side>")
+    parser.add_argument("--server_url", type=str, default="http://localhost:5000/distance/<side>")
     parser.add_argument("--side", type=str, default="a")
     parser.add_argument("--delay_a", type=int, default=1)
     parser.add_argument("--delay_b", type=int, default=3)

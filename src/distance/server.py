@@ -46,7 +46,12 @@ def process(file1, file2):
     pass
 
 
-@app.route('/iot/reset', methods=['GET'])
+@app.route('/')
+def index():
+    return app.send_static_file('index.html')
+
+
+@app.route('/distance/reset', methods=['GET'])
 def reset():
     paired_files[0] = {}
     paired_files[1] = {}
@@ -55,7 +60,7 @@ def reset():
     })
 
 
-@app.route('/iot/status', methods=['GET'])
+@app.route('/distance/status', methods=['GET'])
 def get_status():
     ret = {}
     if paired_files[0]:
@@ -71,7 +76,7 @@ def get_status():
     })
 
 
-@app.route('/iot/<side>', methods=['POST'])
+@app.route('/distance/<side>', methods=['POST'])
 def upload_file(side):
     global paired_files
     file = request.files['file']
