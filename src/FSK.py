@@ -25,11 +25,14 @@ def modulation(args, bits):
     """
     result_wave = np.empty(shape=(1, 0))
     for bit in bits:
-        if bit == 0:
-            frequency = args.frequency_0
+        if bit == 2:  # for blank
+            y = generate_pulse(args.framerate, 1, 0, args.start_place, args.window_length)
         else:
-            frequency = args.frequency_1
-        y = generate_pulse(args.framerate, frequency, args.volume, args.start_place, args.window_length)
+            if bit == 0:
+                frequency = args.frequency_0
+            else:
+                frequency = args.frequency_1
+            y = generate_pulse(args.framerate, frequency, args.volume, args.start_place, args.window_length)
         result_wave = np.append(result_wave, y)
     return result_wave
 
@@ -55,6 +58,7 @@ def get_correlates(args, wave):
         plt.show()
     return correlates
 
+
 def get_window_start(args, start, correlates):
     '''
     描述：用前导码对齐窗口
@@ -65,7 +69,7 @@ def get_window_start(args, start, correlates):
     length_one = round(args.framerate * args.window_length)
     length_preamble = len(args.preamble) * length_one
     for i in range(len(correlates) - start):
-        if(abs(correlates[i + start]) >= args.threshold and real_wave_start_place == -1):
+        if abs(correlates[i + start]) >= args.threshold and real_wave_start_place == -1:
             real_wave_start_place = i + start
             break
     if real_wave_start_place == -1:
@@ -95,7 +99,7 @@ def demodulate_one(args, wave):
     dist_1 = abs(max_freq - args.frequency_1)
     if dist_0 < dist_1:
         return 0
-    else: 
+    else:
         return 1
 
 
@@ -128,30 +132,30 @@ def demodulation(args, wave):
     start = 0
     packet_results = []
     while start < len(wave):
-        #找起始位置
+        # 找起始位置
         start_place = get_window_start(args, start, correlates)
         print(start_place)
         if start_place < 0:
             break
-        #之后28个bit---前导码20bit，8bit长度
+        # 之后28个bit---前导码20bit，8bit长度
         preamble_end = start_place + length_one * len(args.preamble)
-        length_end = preamble_end + length_one * args.packet_head_length 
-        preamble_wave = wave[start_place : preamble_end]
-        length_wave = wave[preamble_end : length_end]
+        length_end = preamble_end + length_one * args.packet_head_length
+        preamble_wave = wave[start_place: preamble_end]
+        length_wave = wave[preamble_end: length_end]
 
-        #解码长度
+        # 解码长度
         length_result = demodulate_packet(args, length_wave)
         length = bit_to_int(length_result)
         if length < 0:
             break
 
-        #截取对应长度数据，解码
+        # 截取对应长度数据，解码
         packet_end = length_end + length_one * length
         packet_wave = wave[length_end:packet_end]
         packet_result = demodulate_packet(args, packet_wave)
         packet_results.append((packet_result, start_place))
 
-        #更新位置
+        # 更新位置
         start = packet_end
     return packet_results
 
@@ -164,7 +168,7 @@ def test_fsk():
     '''
     args = init_args()
     original_seq = get_original_seq(args)
-    get_wave = load_wave(save_base = args.save_base_receive, file_name = 'res.wav')
+    get_wave = load_wave(save_base=args.save_base_receive, file_name='res.wav')
     get_seq = demodulation(args, get_wave)
     accuracy_list = []
     for i in range(len(original_seq)):
@@ -182,9 +186,9 @@ if __name__ == '__main__':
     bits = int_to_bit(length)
     original_seq = args.preamble + bits + original_seq
     the_wave = modulation(args, original_seq)
-    save_wave(the_wave, save_base = args.save_base_send, file_name = 'kebab.wav')
-    
-    get_wave = load_wave(save_base = args.save_base_send, file_name = 'kebab.wav')
+    save_wave(the_wave, save_base=args.save_base_send, file_name='kebab.wav')
+
+    get_wave = load_wave(save_base=args.save_base_send, file_name='kebab.wav')
     get_seq = demodulation(args, get_wave)
     result = string_decode(get_seq[0][0])
     print(result)

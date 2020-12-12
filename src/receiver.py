@@ -57,7 +57,7 @@ class Receiver:
         '''
         self.label1["text"] = "未开始录音"
         self.running = False
-        self.save_wave()
+        # self.save_wave()
         self.get_result()
 
     def save_wave(self):
@@ -82,10 +82,14 @@ class Receiver:
         返回：无
         '''
         get_wave = load_wave(save_base=self.args.save_base_receive, file_name=self.save_place)
+        if len(get_wave.shape) == 2:
+            get_wave = get_wave[:, 0]
         packets = demodulation(self.args, get_wave)
-        result = decode_bluetooth_packet(self.args, packets)
+        # print(packets)
+        count, result = decode_bluetooth_packet(self.args, packets)
 
-        tkinter.messagebox.showinfo('传输结果', result)
+        tkinter.messagebox.showinfo('传输结果', '蓝牙包成功解码数量：{}/{}\n解码信息：{}'
+                                    .format(count, len(packets), result))
 
     def init_ui(self):
         '''

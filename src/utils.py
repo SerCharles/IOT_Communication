@@ -173,7 +173,7 @@ def string_decode(bit_list):
         byte_list.append(the_num)
         start += 8
     byte_list = bytes(byte_list)
-    result = bytes.decode(byte_list, encoding="utf-8")
+    result = bytes.decode(byte_list, encoding="utf-8", errors='strict')
     return result
 
 
@@ -249,21 +249,20 @@ def encode_bluetooth_packet(args, seq):
     参数：全局参数，0-1序列
     返回：完整的蓝牙包(0-1序列)(包括分包)
     '''
-    encoded_seq = string_encode(seq)
-    encoded_len = len(encoded_seq)
     packet_payload_len = 40
-    packets_cnt = int(encoded_len / packet_payload_len) if encoded_len % packet_payload_len == 0 \
-        else int(encoded_len / packet_payload_len) + 1
-    blank_len = 10
+    packets_cnt = 0
+    blank_len = 5
     bluetooth_packets_seq = []
-    bluetooth_packets_seq += ([0] * blank_len)
-    # 分包
-    for i in range(packets_cnt):
-        bluetooth_packets_seq += args.preamble
-        bluetooth_packets_seq += (int_to_bit(packet_payload_len if i != packets_cnt - 1
-                                             else encoded_len - i * packet_payload_len))
-        bluetooth_packets_seq += (encoded_seq[i * packet_payload_len: min((i + 1) * packet_payload_len, encoded_len)])
-        bluetooth_packets_seq += ([0] * blank_len)
+    encoded_seq = []
+    for i in range(len(seq)):
+        encoded_seq += string_encode(seq[i])
+        if len(encoded_seq) >= packet_payload_len or i == len(seq) - 1:
+            bluetooth_packets_seq += ([2] * blank_len)
+            bluetooth_packets_seq += args.preamble
+            bluetooth_packets_seq += (int_to_bit(len(encoded_seq)))
+            bluetooth_packets_seq += encoded_seq
+            encoded_seq = []
+            packets_cnt += 1
 
     return bluetooth_packets_seq
 
@@ -275,7 +274,12 @@ def decode_bluetooth_packet(args, packets):
     参数：全局参数，蓝牙包
     返回：经过修正后的内容
     '''
-    seq = []
+    result = ''
+    count = 0
     for packet in packets:
-        seq += packet
-    return string_decode(seq)
+        try:
+            result += ' \"{}\" '.format(string_decode(packet))
+            count += 1
+        except UnicodeError:
+            result += ' \"ERROR!\" '
+    return count, result
