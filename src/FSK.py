@@ -186,5 +186,5 @@ if __name__ == '__main__':
     
     get_wave = load_wave(save_base = args.save_base_send, file_name = 'kebab.wav')
     get_seq = demodulation(args, get_wave)
-    result = string_decode(get_seq[0])
+    result = string_decode(get_seq[0][0])
     print(result)
