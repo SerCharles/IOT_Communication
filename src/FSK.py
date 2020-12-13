@@ -176,24 +176,14 @@ def test_fsk():
     get_wave = load_wave(save_base=args.save_base_receive, file_name='res.wav')
     get_seq = demodulation(args, get_wave)
     accuracy_list = []
+    result_list = []
     for i in range(len(original_seq)):
         seq, off = get_seq[i]
+        result_list.append(seq)
         accuracy = get_accuracy(original_seq[i], seq)
         accuracy_list.append(accuracy)
         print("Data {}, Accuracy {:.4f}%".format(i + 1, accuracy * 100))
-
+    output_decoded_seq(args, result_list)
 
 if __name__ == '__main__':
-    # 目前是编码，解码的示例
-    args = init_args()
-    original_seq = string_encode('ceddin deden!')
-    length = len(original_seq)
-    bits = int_to_bit(length)
-    original_seq = args.preamble + bits + original_seq
-    the_wave = modulation(args, original_seq)
-    save_wave(the_wave, save_base=args.save_base_send, file_name='kebab.wav')
-
-    get_wave = load_wave(save_base=args.save_base_send, file_name='kebab.wav')
-    get_seq = demodulation(args, get_wave)
-    result = string_decode(get_seq[0][0])
-    print(result)
+    test_fsk()

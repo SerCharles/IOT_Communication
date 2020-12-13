@@ -39,6 +39,7 @@ def init_args():
     parser.add_argument("--save_base_send", type=str, default='send')
     parser.add_argument("--save_base_receive", type=str, default='receive')
     parser.add_argument("--original_place", type=str, default='content.csv')
+    parser.add_argument("--result_place", type=str, default='result.csv')
 
     # 包长度是几个bit
     parser.add_argument("--packet_head_length", type=int, default=8)
@@ -227,6 +228,21 @@ def get_original_seq(args):
             original_seq.append(seq)
     return original_seq
 
+def output_decoded_seq(args, results):
+    '''
+    描述：输出csv结果
+    参数：全局参数，解码结果
+    返回：无
+    '''
+    csvfile = open('result.csv', 'w', newline = '')
+    writer = csv.writer(csvfile)
+    output = []
+    for result in results:
+        result = [len(result)] + result
+        output.append(result)
+    writer.writerows(output)
+    csvfile.close()
+
 
 def get_accuracy(original_seq, get_seq):
     '''
@@ -282,3 +298,13 @@ def decode_bluetooth_packet(args, packets):
         except UnicodeError:
             result += ' \"ERROR!\" '
     return count, result
+
+
+csvfile = open('result.csv', 'w', newline='')  #打开方式还可以使用file对象
+writer = csv.writer(csvfile)
+
+data = [
+('小河', '25', '1234567'),('小芳', '18', '789456'),('小芳', '18', '789456')]
+writer.writerows(data)
+
+csvfile.close()
