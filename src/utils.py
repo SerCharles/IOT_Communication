@@ -293,7 +293,7 @@ def decode_bluetooth_packet(args, packets):
     count = 0
     for packet, _ in packets:
         try:
-            result += ' \"{}\" '.format(string_decode(packet))
+            result += '{}'.format(string_decode(packet))
             count += 1
         except UnicodeError:
             result += ' \"ERROR!\" '

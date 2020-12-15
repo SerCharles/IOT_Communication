@@ -187,3 +187,12 @@ def test_fsk():
 
 if __name__ == '__main__':
     test_fsk()
+    # args = init_args()
+    # original_seq = get_original_seq(args)
+    # get_wave = load_wave(save_base=args.save_base_receive, file_name='res.wav')
+    # get_seq = demodulation(args, get_wave)
+    # csvfile = open("result.csv", "w", newline="")
+    # writer = csv.writer(csvfile)
+    # for seq_tup in get_seq:
+    #     writer.writerow([len(seq_tup[0])] + seq_tup[0])
+    # csvfile.close()
