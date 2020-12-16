@@ -124,9 +124,9 @@ def get_bluetooth_file():
             get_wave = get_wave[:, 0]
 
         start = time.time_ns()
-        packets = FSK.demodulation(program_args, get_wave)
-        count, result = utils.decode_bluetooth_packet(program_args, packets)
-        f = open('../result.txt', 'w')
+        packets = FSK.demodulation(utils.init_args(), get_wave)
+        count, result = utils.decode_bluetooth_packet(utils.init_args(), packets)
+        f = open('../result.txt', 'w', encoding='utf-8')
         f.write(result)
         f.close()
         end = time.time_ns()
