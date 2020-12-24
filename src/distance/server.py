@@ -116,22 +116,27 @@ def get_bluetooth_file():
     if file:
         print("Received file {}.".format(file.filename))
         file.save('../receive/output.wav')
-        start = time.time_ns()
-        get_wave = utils.load_wave(save_base='../receive', file_name='output.wav')
-        end = time.time_ns()
-        print('读取文件耗时：', (end - start) / 1e6, 'ms')
-        if len(get_wave.shape) == 2:
-            get_wave = get_wave[:, 0]
 
-        start = time.time_ns()
-        packets = FSK.demodulation(utils.init_args(), get_wave)
-        count, result = utils.decode_bluetooth_packet(utils.init_args(), packets)
-        f = open('../result.txt', 'w', encoding='utf-8')
-        f.write(result)
-        f.close()
-        end = time.time_ns()
-        print('解码文本耗时：', (end - start) / 1e6, 'ms')
-        print('蓝牙包成功解码数量：{}\n解码信息：{}\n'.format(count, result))
+        def decode_file():
+            start = time.time_ns()
+            get_wave = utils.load_wave(save_base='../receive', file_name='output.wav')
+            end = time.time_ns()
+            print('读取文件耗时：', (end - start) / 1e6, 'ms')
+            if len(get_wave.shape) == 2:
+                get_wave = get_wave[:, 0]
+
+            start = time.time_ns()
+            packets = FSK.demodulation(utils.init_args(), get_wave)
+            count, result = utils.decode_bluetooth_packet(utils.init_args(), packets)
+            f = open('../result.txt', 'w', encoding='utf-8')
+            f.write(result)
+            f.close()
+            end = time.time_ns()
+            print('解码文本耗时：', (end - start) / 1e6, 'ms')
+            print('蓝牙包成功解码数量：{}\n解码信息：{}\n'.format(count, result))
+
+        thr = threading.Thread(target=decode_file)
+        thr.start()
         return jsonify({
             "success": True,
         })
