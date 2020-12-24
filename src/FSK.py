@@ -23,17 +23,21 @@ def modulation(args, bits):
     参数：全局参数, 0-1比特信号（规定比特信号长度小于等于一个包的限制）
     返回：得到的波---numpy格式的一维数组
     """
-    result_wave = np.empty(shape=(1, 0))
+    code0 = generate_pulse(args.framerate, args.frequency_0, args.volume, args.start_place, args.window_length)
+    code1 = generate_pulse(args.framerate, args.frequency_1, args.volume, args.start_place, args.window_length)
+    code2 = generate_pulse(args.framerate, 1, 0, args.start_place, args.window_length)
+    code_len = len(code0)
+    result_wave = np.zeros(shape=(code_len * len(bits)))
+    start_index = 0
     for bit in bits:
         if bit == 2:  # for blank
-            y = generate_pulse(args.framerate, 1, 0, args.start_place, args.window_length)
+            result_wave[start_index: start_index + code_len] = code2
         else:
             if bit == 0:
-                frequency = args.frequency_0
+                result_wave[start_index: start_index + code_len] = code0
             else:
-                frequency = args.frequency_1
-            y = generate_pulse(args.framerate, frequency, args.volume, args.start_place, args.window_length)
-        result_wave = np.append(result_wave, y)
+                result_wave[start_index: start_index + code_len] = code1
+        start_index += code_len
     return result_wave
 
 
@@ -184,6 +188,7 @@ def test_fsk():
         accuracy_list.append(accuracy)
         print("Data {}, Accuracy {:.4f}%".format(i + 1, accuracy * 100))
     output_decoded_seq(args, result_list)
+
 
 if __name__ == '__main__':
     test_fsk()
