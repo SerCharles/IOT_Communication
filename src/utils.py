@@ -265,7 +265,7 @@ def encode_bluetooth_packet(args, seq):
     参数：全局参数，0-1序列
     返回：完整的蓝牙包(0-1序列)(包括分包)
     """
-    packet_payload_len = 40
+    packet_payload_len = 96
     packets_cnt = 0
     blank_len = 5
     bluetooth_packets_seq = []
@@ -299,12 +299,3 @@ def decode_bluetooth_packet(args, packets):
             result += ' \"ERROR!\" '
     return count, result
 
-
-csvfile = open('result.csv', 'w', newline='')  #打开方式还可以使用file对象
-writer = csv.writer(csvfile)
-
-data = [
-('小河', '25', '1234567'),('小芳', '18', '789456'),('小芳', '18', '789456')]
-writer.writerows(data)
-
-csvfile.close()
