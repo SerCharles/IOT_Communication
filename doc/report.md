@@ -81,6 +81,16 @@ python FSK.py
 
 ### 4.1 实现方法
 
+#### 4.1.1 客户端
 
+客户端有 Python 和 Android 两种
+
+#### 4.1.2 服务器前端
+
+前端页面使用 React + Material UI 完成，使用 npm build 编译结果放在 `src/distance/static` 下。
+
+#### 4.1.3 服务器解码后端
+
+后端在 Flask 运行一个 HTTP Server，接受来自客户端的音频文件。在两个客户端发来的音频中分辨查找两方互相播放的音频，使用 Beep-beep 方法计算距离。
 
 ### 4.2 结果
