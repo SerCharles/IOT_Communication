@@ -267,7 +267,7 @@ def encode_bluetooth_packet(args, seq):
     """
     packet_payload_len = 96
     packets_cnt = 0
-    blank_len = 5
+    blank_len = 60
     bluetooth_packets_seq = []
     encoded_seq = []
     for i in range(len(seq)):
